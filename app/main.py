@@ -1,6 +1,7 @@
 
-from app.database.database import Base, engine
 from fastapi import FastAPI
+
+from app.database.database import Base, engine
 from app.routers import todo
 
 Base.metadata.create_all(bind=engine)
