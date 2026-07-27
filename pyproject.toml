@@ -1,0 +1,21 @@
+[project]
+name = "python-fastapi-sample"
+version = "0.1.0"
+description = "Sample todo list app for testing purposes"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.140.7",
+    "pydantic>=2.13.4",
+    "sqlalchemy>=2.0.51",
+    "uvicorn>=0.51.0",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.15.2",
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.0",
+]
+
