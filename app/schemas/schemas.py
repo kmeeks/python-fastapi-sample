@@ -18,3 +18,10 @@ class TodoOut(TodoCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class TodoListResponse(BaseModel):
+    items: list[TodoOut]
+    page: int
+    size: int
+    total: int

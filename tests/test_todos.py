@@ -48,6 +48,46 @@ def test_list_todos_skip_limit(client):
     assert data[0]["id"] == created_ids[1]
 
 
+def test_list_todos_by_status_envelope_defaults(client):
+    client.post("/todos/", json={"title": "Pending 1", "status": "pending"})
+    client.post("/todos/", json={"title": "Pending 2", "status": "pending"})
+    client.post("/todos/", json={"title": "Done 1", "status": "done"})
+
+    response = client.get("/todos/by-status/pending")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["page"] == 0
+    assert data["size"] == 20
+    assert data["total"] == 2
+    assert len(data["items"]) == 2
+    assert all(todo["status"] == "pending" for todo in data["items"])
+
+
+def test_list_todos_by_status_with_pagination(client):
+    for idx in range(5):
+        response = client.post(
+            "/todos/",
+            json={"title": f"Done {idx}", "status": "done"},
+        )
+        assert response.status_code == 200
+
+    response = client.get("/todos/by-status/done", params={"page": 1, "size": 2})
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["page"] == 1
+    assert data["size"] == 2
+    assert data["total"] == 5
+    assert len(data["items"]) == 2
+    assert all(todo["status"] == "done" for todo in data["items"])
+
+
+def test_list_todos_by_status_respects_max_size(client):
+    response = client.get("/todos/by-status/pending", params={"size": 101})
+    assert response.status_code == 422
+
+
 def test_get_todo(client, sample_todo):
     response = client.get(f"/todos/{sample_todo['id']}")
     assert response.status_code == 200
