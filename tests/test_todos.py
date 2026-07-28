@@ -48,6 +48,66 @@ def test_list_todos_skip_limit(client):
     assert data[0]["id"] == created_ids[1]
 
 
+def test_list_todos_by_status_defaults(client):
+    done_ids = []
+    pending_id = None
+
+    for i in range(3):
+        response = client.post(
+            "/todos/",
+            json={"title": f"Done {i}", "status": "done"},
+        )
+        assert response.status_code == 200
+        done_ids.append(response.json()["id"])
+
+    response = client.post(
+        "/todos/",
+        json={"title": "Pending item", "status": "pending"},
+    )
+    assert response.status_code == 200
+    pending_id = response.json()["id"]
+
+    response = client.get("/todos/by-status/done")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert set(data.keys()) == {"items", "page", "size", "total"}
+    assert data["page"] == 0
+    assert data["size"] == 20
+    assert data["total"] == 3
+    assert [todo["id"] for todo in data["items"]] == done_ids
+    assert all(todo["status"] == "done" for todo in data["items"])
+    assert all(todo["id"] != pending_id for todo in data["items"])
+
+
+def test_list_todos_by_status_page_size(client):
+    for i in range(5):
+        response = client.post(
+            "/todos/",
+            json={"title": f"In progress {i}", "status": "in_progress"},
+        )
+        assert response.status_code == 200
+
+    response = client.get(
+        "/todos/by-status/in_progress",
+        params={"page": 1, "size": 2},
+    )
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["page"] == 1
+    assert data["size"] == 2
+    assert data["total"] == 5
+    assert len(data["items"]) == 2
+    assert [todo["title"] for todo in data["items"]] == ["In progress 2", "In progress 3"]
+    assert all(todo["status"] == "in_progress" for todo in data["items"])
+
+
+def test_list_todos_by_status_size_max_validation(client):
+    response = client.get("/todos/by-status/pending", params={"size": 101})
+    assert response.status_code == 422
+
+
 def test_get_todo(client, sample_todo):
     response = client.get(f"/todos/{sample_todo['id']}")
     assert response.status_code == 200
