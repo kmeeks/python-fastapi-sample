@@ -4,7 +4,7 @@ A simple Todo list API built with FastAPI, SQLAlchemy, and SQLite. Sample code f
 
 ## Requirements
 
-- Python >= 3.13
+- Python 3.11 or newer
 - [uv](https://docs.astral.sh/uv/)
 
 ## Setup
@@ -12,6 +12,8 @@ A simple Todo list API built with FastAPI, SQLAlchemy, and SQLite. Sample code f
 ```bash
 uv sync
 ```
+
+The tracked `.python-version` makes `uv sync` select Python 3.11.
 
 ## Run
 
