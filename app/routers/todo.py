@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.models.models import TodoItem
-from app.schemas.schemas import TodoCreate, TodoOut, TodoUpdate
+from app.schemas.schemas import TodoCreate, TodoListResponse, TodoOut, TodoUpdate
 
 router = APIRouter()
 DbSession = Annotated[Session, Depends(get_db)]
@@ -23,6 +23,24 @@ def create_todo(todo: TodoCreate, db: DbSession):
 @router.get("/", response_model=list[TodoOut])
 def read_todos(db: DbSession, skip: int = 0, limit: int = 10):
     return db.query(TodoItem).offset(skip).limit(limit).all()
+
+
+@router.get("/by-status/{status}", response_model=TodoListResponse)
+def read_todos_by_status(
+    status: str,
+    db: DbSession,
+    page: int = Query(default=0, ge=0),
+    size: int = Query(default=20, ge=1, le=100),
+):
+    base_query = db.query(TodoItem).filter(TodoItem.status == status)
+    total = base_query.count()
+    items = base_query.offset(page * size).limit(size).all()
+    return {
+        "items": items,
+        "page": page,
+        "size": size,
+        "total": total,
+    }
 
 
 @router.get("/{todo_id}", response_model=TodoOut)
